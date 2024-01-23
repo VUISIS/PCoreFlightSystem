@@ -1,0 +1,1 @@
+module CFS = { TEMP_MON, TEMP_IO, MODS, TO, CI };
