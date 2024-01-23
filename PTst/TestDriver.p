@@ -3,15 +3,15 @@ event ePublish: (name: string, payload: seq[float]);
 
 machine CFSTest
 {
+  var commandInterface: CI;
+  var temp_mon: TEMP_MON;
+  var mods: MODS;
+  var telem: TO;
+  var tempA: TEMP_IO;
+  var tempB: TEMP_IO;
+  var tempC: TEMP_IO;
   start state Init 
   {
-    var commandInterface: CI;
-    var temp_mon: TEMP_MON;
-    var mods: MODS;
-    var telem: TO;
-    var tempA: TEMP_IO;
-    var tempB: TEMP_IO;
-    var tempC: TEMP_IO;
     entry 
     {  
       tempA = new TEMP_IO("A");

@@ -1,3 +1,3 @@
 test tcCFSTest [main=CFSTest]:
-  assert Monitor in
+  assert System in
   (union CFS, { CFSTest });

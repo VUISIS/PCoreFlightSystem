@@ -1,7 +1,7 @@
 machine TEMP_IO
 {
   var temp_name: string;
-  var temp_mon: TEMP_MON;
+  var temp_mon: machine;
   var temperature: float;
   start state Init 
   {
@@ -10,9 +10,9 @@ machine TEMP_IO
         temperature = 40.0;
         temp_name = name;
     }
-    on eSubscribe do (name: string, mon: machine)
+    on eSubscribe do (input: (name: string, mod: machine))
     {
-        temp_mon = mon;
+        temp_mon = input.mod;
         goto Subscribed;
     }
   }
@@ -29,10 +29,10 @@ machine TEMP_IO
   {
     entry
     {
-        var data = seq[float];
-        data += (0, temperature);
+        var pl: seq[float];
+        pl += (0, temperature);
 
-        send temp_mon, ePublish, ( name = temp_name, payload = data );
+        send temp_mon, ePublish, ( name = temp_name, payload = pl );
         goto Subscribed;
     }
   }

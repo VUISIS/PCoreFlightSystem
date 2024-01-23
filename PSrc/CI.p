@@ -1,4 +1,4 @@
-enum tCommand = { MAIN };
+enum tCommand { MAIN }
 
 event eCommand: tCommand;
 
@@ -6,9 +6,9 @@ machine CI
 {
   start state Init 
   {
-    on eSubscribe do (name: string, mod: machine)
+    on eSubscribe do (input: (name: string, mod: machine))
     {
-        send mod, eCommand, MAIN;
+        send input.mod, eCommand, MAIN;
     }
   }
 }
