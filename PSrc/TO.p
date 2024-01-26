@@ -1,9 +1,9 @@
 enum tTempType { NOMINAL, HOT, COLD }
 enum tTempChange { INCREASING, DECREASING, UNCHANGED }
 
-type tTelemetry = (tempA: float, tempAChange: tTempChange, tempAType: tTempType, 
-                   tempB: float, tempBChange: tTempChange, tempBType: tTempType, 
-                   tempC: float, tempCChange: tTempChange, tempCType: tTempType);
+type tTelemetry = (tempA: int, tempAChange: tTempChange, tempAType: tTempType, 
+                   tempB: int, tempBChange: tTempChange, tempBType: tTempType, 
+                   tempC: int, tempCChange: tTempChange, tempCType: tTempType);
 
 event eTelemetry: tTelemetry;
 

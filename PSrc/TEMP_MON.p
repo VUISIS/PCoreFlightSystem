@@ -1,19 +1,32 @@
 machine TEMP_MON 
 {
-  var telemetry: machine;
-  var temp_ioA: float;
-  var temp_ioB: float;
-  var temp_ioC: float;
+  var telemetry: TO;
+  var mods: MODS;
+  var temp_ioA: int;
+  var temp_ioB: int;
+  var temp_ioC: int;
+  var temp_ioAType: tTempType;
+  var temp_ioBType: tTempType;
+  var temp_ioCType: tTempType;
+  var temp_ioAChange: tTempChange;
+  var temp_ioBChange: tTempChange;
+  var temp_ioCChange: tTempChange;
   var cur_cmd: tCommand;
   start state Init 
   {
-    entry
+    entry (input: (m: MODS, t: TO))
     {
-      temp_ioA = 0.0;
-      temp_ioB = 0.0;
-      temp_ioC = 0.0;
+      telemetry = input.t;
+      mods = input.m;
+      temp_ioA = -999;
+      temp_ioB = -999;
+      temp_ioC = -999;
 
       goto Monitor;
+    }
+    on eCommand do (cmd: tCommand)
+    {
+      cur_cmd = cmd;
     }
   }
 
@@ -23,14 +36,7 @@ machine TEMP_MON
     {
       cur_cmd = cmd;
     }
-    on eSubscribe do (input: (name: string, mod: machine))
-    {
-      if(input.name == "TO")
-      {
-        telemetry = input.mod;
-      }
-    }
-    on ePublish do (input: (name: string, payload: seq[float]))
+    on ePublish do (input: (name: string, payload: seq[int]))
     {
       var telem: tTelemetry;
       var tempChange: tTempChange;
@@ -40,36 +46,48 @@ machine TEMP_MON
       {
         tempChange = TemperatureChange("A", input.payload[0]);
         temp_ioA = input.payload[0];
-        telem.tempA = input.payload[0];
-        telem.tempAChange = tempChange;
-        telem.tempAType = tempType;
+        temp_ioAChange = tempChange;
+        temp_ioAType = tempType;
       }
       else if (input.name == "B")
       {
         tempChange = TemperatureChange("B", input.payload[0]);
         temp_ioB = input.payload[0];
-        telem.tempB = input.payload[0];
-        telem.tempBChange = tempChange;
-        telem.tempBType = tempType;
+        temp_ioBChange = tempChange;
+        temp_ioBType = tempType;
       }
       else if (input.name == "C")
       {
         tempChange = TemperatureChange("C", input.payload[0]);
         temp_ioC = input.payload[0];
-        telem.tempC = input.payload[0];
-        telem.tempCChange = tempChange;
-        telem.tempCType = tempType;
+        temp_ioCChange = tempChange;
+        temp_ioCType = tempType;
       }
       else
       {
         assert input.name == "A" || input.name == "B" || input.name == "C", "Input name does not match temp names.";
       }
 
+      telem.tempA = temp_ioA;
+      telem.tempB = temp_ioB;
+      telem.tempC = temp_ioC;
+      telem.tempAChange = temp_ioAChange;
+      telem.tempBChange = temp_ioBChange;
+      telem.tempCChange = temp_ioCChange;
+      telem.tempAType = temp_ioAType;
+      telem.tempBType = temp_ioBType;
+      telem.tempCType = temp_ioCType;
+
+      if(cur_cmd == AVERAGE)
+      {
+        send mods, eTelemetry, telem;
+      }
+      announce eSpec_Temperature, telem;
       send telemetry, eTelemetry, telem;
     }
   }
 
-  fun TemperatureChange(name: string, temp: float): tTempChange
+  fun TemperatureChange(name: string, temp: int): tTempChange
   {
     if (name == "A")
     {
@@ -110,13 +128,13 @@ machine TEMP_MON
     return UNCHANGED;
   }
 
-  fun TemperatureType(temp: float): tTempType
+  fun TemperatureType(temp: int): tTempType
   {
-    if (temp > 85.0)
+    if (temp > 85)
     {
       return HOT;
     }
-    else if (temp < 45.0)
+    else if (temp < 45)
     {
       return COLD;
     }

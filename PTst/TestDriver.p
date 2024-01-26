@@ -1,7 +1,8 @@
-event eSubscribe: (name: string, mod: machine);
-event ePublish: (name: string, payload: seq[float]);
+event ePublish: (name: string, payload: seq[int]);
+event eSubscribeTemp: (name: string, io: TEMP_IO);
+event eStart;
 
-machine CFSTest
+machine CFSMainTest
 {
   var commandInterface: CI;
   var temp_mon: TEMP_MON;
@@ -14,28 +15,63 @@ machine CFSTest
   {
     entry 
     {  
-      tempA = new TEMP_IO("A");
-      tempB = new TEMP_IO("B");
-      tempC = new TEMP_IO("C");
-
       telem = new TO();
-
-      temp_mon = new TEMP_MON();
       mods = new MODS();
-      commandInterface = new CI();
 
-      send commandInterface, eSubscribe, (name = "TEMP_MON", mod = temp_mon);
-      send commandInterface, eSubscribe, (name = "MODS", mod = mods);
+      temp_mon = new TEMP_MON((m = mods, t = telem));
 
-      send temp_mon, eSubscribe,  (name = "TO", mod = telem);
-      
-      send tempA, eSubscribe, (name = "TEMP_MON", mod = temp_mon);
-      send tempB, eSubscribe, (name = "TEMP_MON", mod = temp_mon);
-      send tempC, eSubscribe, (name = "TEMP_MON", mod = temp_mon);
+      tempA = new TEMP_IO((name = "A", temp = 30, mon = temp_mon));
+      tempB = new TEMP_IO((name = "B", temp = 75, mon = temp_mon));
+      tempC = new TEMP_IO((name = "C", temp = 70, mon = temp_mon));
 
-      send mods, eSubscribe, (name = "TEMP_IOA", mod = tempA);
-      send mods, eSubscribe, (name = "TEMP_IOB", mod = tempB);
-      send mods, eSubscribe, (name = "TEMP_IOC", mod = tempC);
+      commandInterface = new CI((cmd = MAIN, mod = mods, monitor = temp_mon));
+
+      send mods, eSubscribeTemp, (name = "A", io = tempA);
+      send mods, eSubscribeTemp, (name = "B", io = tempB);
+      send mods, eSubscribeTemp, (name = "C", io = tempC);
+
+      send tempA, eStart;
+      send tempB, eStart;
+      send tempC, eStart;
+
+      send mods, eStart;
+    }
+  }
+}
+
+machine CFSAvgTest
+{
+  var commandInterface: CI;
+  var temp_mon: TEMP_MON;
+  var mods: MODS;
+  var telem: TO;
+  var tempA: TEMP_IO;
+  var tempB: TEMP_IO;
+  var tempC: TEMP_IO;
+  start state Init 
+  {
+    entry 
+    {  
+      telem = new TO();
+      mods = new MODS();
+
+      temp_mon = new TEMP_MON((m = mods, t = telem));
+
+      tempA = new TEMP_IO((name = "A", temp = 30, mon = temp_mon));
+      tempB = new TEMP_IO((name = "B", temp = 75, mon = temp_mon));
+      tempC = new TEMP_IO((name = "C", temp = 70, mon = temp_mon));
+
+      commandInterface = new CI((cmd = AVERAGE, mod = mods, monitor = temp_mon));
+
+      send mods, eSubscribeTemp, (name = "A", io = tempA);
+      send mods, eSubscribeTemp, (name = "B", io = tempB);
+      send mods, eSubscribeTemp, (name = "C", io = tempC);
+
+      send tempA, eStart;
+      send tempB, eStart;
+      send tempC, eStart;
+
+      send mods, eStart;
     }
   }
 }

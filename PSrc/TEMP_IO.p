@@ -1,39 +1,37 @@
 machine TEMP_IO
 {
   var temp_name: string;
-  var temp_mon: machine;
-  var temperature: float;
+  var temp_mon: TEMP_MON;
+  var temperature: int;
+  var i: int;
   start state Init 
   {
-    entry(name: string)
+    entry(input: (name: string, temp: int, mon: TEMP_MON))
     {
-        temperature = 40.0;
-        temp_name = name;
+      temp_mon = input.mon;
+      temperature = input.temp;
+      temp_name = input.name;
     }
-    on eSubscribe do (input: (name: string, mod: machine))
-    {
-        temp_mon = input.mod;
-        goto Subscribed;
-    }
-  }
-
-  state Subscribed
-  {
-    entry
-    {
-        goto Publish;
-    }
+    on eStart goto Publish;
   }
 
   state Publish
   {
     entry
     {
-        var pl: seq[float];
-        pl += (0, temperature);
+      var pl: seq[int];
+      pl += (0, temperature);
 
-        send temp_mon, ePublish, ( name = temp_name, payload = pl );
-        goto Subscribed;
+      send temp_mon, ePublish, ( name = temp_name, payload = pl );
+    }
+    on eSetDelta do (delta: int)
+    {
+      var pl: seq[int];
+      temperature = temperature + delta;
+
+      pl += (0, temperature);
+
+      send temp_mon, ePublish, ( name = temp_name, payload = pl );
     }
   }
 }

@@ -1,14 +1,21 @@
-enum tCommand { MAIN }
+enum tCommand { MAIN, AVERAGE }
 
 event eCommand: tCommand;
 
 machine CI
 {
+  var ci_cmd: tCommand;
+  var mods: MODS;
+  var mon: TEMP_MON;
   start state Init 
   {
-    on eSubscribe do (input: (name: string, mod: machine))
+    entry (input: (cmd: tCommand, mod: MODS, monitor: TEMP_MON))
     {
-        send input.mod, eCommand, MAIN;
+      ci_cmd = input.cmd;
+      mods = input.mod;
+      mon = input.monitor;
+      send mon, eCommand, ci_cmd;
+      send mods, eCommand, ci_cmd;
     }
   }
 }
